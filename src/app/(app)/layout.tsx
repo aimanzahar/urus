@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/auth";
 import { listPages } from "@/lib/data/pages";
 import { listDatabasesForPage } from "@/lib/data/databases";
 import SuppressNativeContextMenu from "@/components/SuppressNativeContextMenu";
+import RealtimeProvider from "@/components/realtime/RealtimeProvider";
 import Sidebar, { type SidebarPage } from "./Sidebar";
 
 export default async function AppLayout({
@@ -23,10 +24,12 @@ export default async function AppLayout({
   }));
 
   return (
-    <div className="flex h-dvh overflow-hidden">
-      <SuppressNativeContextMenu />
-      <Sidebar pages={pages} />
-      <main className="flex-1 min-w-0 overflow-hidden bg-bg">{children}</main>
-    </div>
+    <RealtimeProvider>
+      <div className="flex h-dvh overflow-hidden">
+        <SuppressNativeContextMenu />
+        <Sidebar pages={pages} />
+        <main className="flex-1 min-w-0 overflow-hidden bg-bg">{children}</main>
+      </div>
+    </RealtimeProvider>
   );
 }

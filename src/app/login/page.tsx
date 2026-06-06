@@ -6,9 +6,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2.5 justify-center mb-6">
           <div className="w-9 h-9 rounded-[10px] bg-accent text-white grid place-items-center font-semibold text-lg">
-            P
+            U
           </div>
-          <span className="text-xl font-semibold tracking-tight">Plan</span>
+          <span className="text-xl font-semibold tracking-tight">Urus</span>
         </div>
         <div className="card p-6">
           <h1 className="text-base font-semibold mb-1">Welcome back</h1>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRealtime } from "@/components/realtime/RealtimeProvider";
 import SelectCell from "./SelectCell";
 import RelationCell from "./RelationCell";
 import ImageCell from "./ImageCell";
@@ -97,7 +98,7 @@ function CheckboxCell({ databaseId, row, field, variant }: CellProps) {
   );
 }
 
-export default function CellEditor(props: CellProps) {
+function renderCell(props: CellProps) {
   switch (props.field.type) {
     case "number":
       return <NumberCell {...props} />;
@@ -117,4 +118,18 @@ export default function CellEditor(props: CellProps) {
     default:
       return <TextCell {...props} />;
   }
+}
+
+export default function CellEditor(props: CellProps) {
+  const rt = useRealtime();
+  // Report which row this user is editing (focus bubbles through display:contents).
+  return (
+    <div
+      style={{ display: "contents" }}
+      onFocus={() => rt?.reportEditing(props.row.id)}
+      onBlur={() => rt?.reportEditing(null)}
+    >
+      {renderCell(props)}
+    </div>
+  );
 }

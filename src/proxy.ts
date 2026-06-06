@@ -14,7 +14,14 @@ import { SESSION_COOKIE } from "./lib/constants";
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/login") || pathname.startsWith("/api/uploads")) {
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/uploads") ||
+    pathname.startsWith("/api/stream") ||
+    pathname.startsWith("/api/presence")
+  ) {
+    // These routes self-guard with getAuth() and must NOT redirect to /login
+    // (EventSource / fetch can't follow an HTML redirect).
     return NextResponse.next();
   }
 

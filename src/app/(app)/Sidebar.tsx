@@ -101,7 +101,7 @@ function ThemeToggle() {
         const next = !root.classList.contains("dark");
         root.classList.toggle("dark", next);
         try {
-          localStorage.setItem("plan-theme", next ? "dark" : "light");
+          localStorage.setItem("urus-theme", next ? "dark" : "light");
         } catch {}
         setDark(next);
       }}
@@ -118,9 +118,9 @@ export default function Sidebar({ pages }: { pages: SidebarPage[] }) {
     <aside className="w-[260px] shrink-0 h-dvh bg-sidebar border-r border-line flex flex-col">
       <div className="flex items-center gap-2 px-3 h-12 shrink-0">
         <div className="w-6 h-6 rounded-md bg-accent text-white grid place-items-center text-xs font-semibold">
-          P
+          U
         </div>
-        <span className="font-semibold text-sm tracking-tight">Plan</span>
+        <span className="font-semibold text-sm tracking-tight">Urus</span>
         <div className="ml-auto flex items-center gap-0.5">
           <ThemeToggle />
           <form action={logoutAction}>

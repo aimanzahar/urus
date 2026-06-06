@@ -6,7 +6,7 @@ services:
         # Path prefix the app is served under (e.g. /plan). Baked at build
         # time because Next.js' basePath is a compile-time setting.
         NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH:-}"
-    container_name: plan-app
+    container_name: urus-app
     restart: unless-stopped
     environment:
       # Shared team password + cookie-signing secret. Set these in a .env
@@ -20,9 +20,9 @@ services:
       - ./data:/app/data
     ports:
       # Bound to 0.0.0.0 so other machines on the LAN can reach it
-      # (it's password-protected). Defaults to 3210; override with PLAN_PORT.
-      # For host-only access, change to "127.0.0.1:${PLAN_PORT:-3210}:80".
-      - "0.0.0.0:${PLAN_PORT:-3210}:80"
+      # (it's password-protected). Defaults to 3210; override with URUS_PORT.
+      # For host-only access, change to "127.0.0.1:${URUS_PORT:-3210}:80".
+      - "0.0.0.0:${URUS_PORT:-3210}:80"
     healthcheck:
       test:
         - CMD-SHELL

@@ -21,6 +21,8 @@ import { useState, useTransition } from "react";
 import { optClass } from "@/components/cells/shared";
 import { ContextMenu } from "@/components/ContextMenu";
 import { MenuItem } from "@/components/Menu";
+import { useRealtime } from "@/components/realtime/RealtimeProvider";
+import { EditingBadge, editingShadow } from "@/components/realtime/EditingBadge";
 import {
   addOptionAction,
   createRowAction,
@@ -80,17 +82,28 @@ function Card({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: row.id });
+  const rt = useRealtime();
+  const editors = rt?.editingByRow[row.id] ?? [];
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`card p-2.5 cursor-pointer hover:shadow-md ${
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        boxShadow: editingShadow(editors),
+      }}
+      className={`card p-2.5 cursor-pointer hover:shadow-md relative ${
         isDragging ? "opacity-30" : ""
       }`}
       onClick={() => onOpenRow(row.id)}
       {...attributes}
       {...listeners}
     >
+      {editors.length > 0 ? (
+        <div className="absolute right-1.5 top-1.5 z-10">
+          <EditingBadge editors={editors} />
+        </div>
+      ) : null}
       <CardBody row={row} fields={fields} skip={skip} />
     </div>
   );

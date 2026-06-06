@@ -15,6 +15,7 @@ import {
 import AddFieldMenu from "./chrome/AddFieldMenu";
 import ViewControls from "./chrome/ViewControls";
 import RowDetailDrawer from "./RowDetailDrawer";
+import PresenceAvatars from "@/components/realtime/PresenceAvatars";
 
 function BackgroundMenuItems({ databaseId }: { databaseId: string }) {
   const newRow = () => {
@@ -90,7 +91,8 @@ export default function DatabaseWorkspace({
         <div className="flex items-center gap-2 px-4 pt-3">
           <span className="text-lg">{database.icon ?? "▤"}</span>
           <DbTitle database={database} />
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
+            <PresenceAvatars />
             <AddFieldMenu databaseId={database.id} />
             <DbMenu database={database} />
           </div>

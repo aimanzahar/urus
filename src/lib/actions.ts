@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { publishChange } from "./realtime";
 import {
   checkPassword,
   clearedSessionCookie,
@@ -67,11 +68,15 @@ function s(fd: FormData, key: string): string {
 
 function revalidateDb(databaseId: string): void {
   revalidatePath(`/db/${databaseId}`);
+  // Push the change live to everyone viewing this database (real-time sync).
+  publishChange("db", databaseId);
 }
 
 function revalidateAll(): void {
   // Sidebar lives in the (app) layout, so structural changes revalidate it.
   revalidatePath("/", "layout");
+  // Structural change (pages/databases) — refresh every connected client.
+  publishChange("workspace");
 }
 
 // --- auth ------------------------------------------------------------------

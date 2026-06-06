@@ -19,6 +19,8 @@ import { useTransition } from "react";
 import CellEditor from "@/components/cells/CellEditor";
 import { ContextMenu } from "@/components/ContextMenu";
 import { MenuItem } from "@/components/Menu";
+import { useRealtime } from "@/components/realtime/RealtimeProvider";
+import { EditingBadge, editingShadow } from "@/components/realtime/EditingBadge";
 import {
   createFieldAction,
   createRowAction,
@@ -116,6 +118,8 @@ function SortableRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: row.id, disabled: !draggable });
+  const rt = useRealtime();
+  const editors = rt?.editingByRow[row.id] ?? [];
 
   return (
     <div
@@ -124,11 +128,17 @@ function SortableRow({
         gridTemplateColumns: cols,
         transform: CSS.Transform.toString(transform),
         transition,
+        boxShadow: editingShadow(editors),
       }}
-      className={`grid border-b border-line hover:bg-surface-2 group ${
-        isDragging ? "drag-ghost relative z-10 bg-surface" : ""
+      className={`grid border-b border-line hover:bg-surface-2 group relative ${
+        isDragging ? "drag-ghost z-10 bg-surface" : ""
       }`}
     >
+      {editors.length > 0 ? (
+        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10">
+          <EditingBadge editors={editors} />
+        </div>
+      ) : null}
       <div className="flex items-center justify-center gap-0.5 text-ink-faint">
         {draggable ? (
           <button

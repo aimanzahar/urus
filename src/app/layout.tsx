@@ -9,10 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Plan — your team's workspace",
+  title: "Urus — your team's workspace",
   description:
     "A self-hosted planning workspace: databases with Table, Board, Calendar, Timeline and Gallery views, relations and image uploads.",
-  applicationName: "Plan",
+  applicationName: "Urus",
 };
 
 export const viewport: Viewport = {
@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 const THEME_SCRIPT = `
   (function(){
     try {
-      var saved = localStorage.getItem('plan-theme');
+      var saved = localStorage.getItem('urus-theme');
       if (saved === 'dark') document.documentElement.classList.add('dark');
     } catch (e) {}
   })();
