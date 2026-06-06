@@ -1,0 +1,28 @@
+# Build outputs and caches
+.next
+node_modules
+.turbo
+*.tsbuildinfo
+
+# Runtime data (SQLite + uploads live on a volume)
+data
+
+# Secrets and local env
+.env
+.env.local
+.env.*.local
+
+# VCS + IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Logs and OS noise
+*.log
+.DS_Store
+
+# Docker assets themselves
+Dockerfile
+docker-compose.yml
+.dockerignore
