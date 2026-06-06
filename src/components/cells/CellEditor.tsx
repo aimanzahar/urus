@@ -74,7 +74,7 @@ function CheckboxCell({ databaseId, row, field, variant }: CellProps) {
   return (
     <div
       className={
-        variant === "cell" ? "flex items-center justify-center h-full py-1" : ""
+        variant === "cell" ? "flex items-center h-full px-2.5 py-1" : ""
       }
     >
       <input
