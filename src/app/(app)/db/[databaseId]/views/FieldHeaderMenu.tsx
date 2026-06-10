@@ -239,13 +239,16 @@ export default function FieldHeaderMenu({
   return (
     <Menu
       width={264}
+      triggerClassName="block"
       button={
-        <button className="flex items-center gap-1.5 px-2 py-1.5 w-full text-left hover:bg-surface-2 rounded transition-colors group">
-          <span className="text-ink-faint text-xs">
+        <button className="flex items-center gap-1.5 px-2.5 py-2 w-full text-left hover-wash transition-colors group">
+          <span className="text-ink-faint text-[11px]">
             {FIELD_TYPE_ICON[field.type]}
           </span>
-          <span className="text-[13px] font-medium truncate">{field.name}</span>
-          <span className="ml-auto text-ink-faint opacity-0 group-hover:opacity-100 text-xs">
+          <span className="text-xs font-medium text-ink-soft group-hover:text-ink truncate transition-colors">
+            {field.name}
+          </span>
+          <span className="ml-auto text-ink-faint opacity-0 group-hover:opacity-100 text-[10px]">
             ▾
           </span>
         </button>

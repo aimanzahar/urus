@@ -27,11 +27,14 @@ export function Menu({
   children,
   align = "left",
   width = 224,
+  triggerClassName = "inline-block",
 }: {
   button: ReactNode;
   children: ReactNode;
   align?: "left" | "right";
   width?: number;
+  /** Class for the trigger wrapper, e.g. "block" to fill the parent. */
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
@@ -98,7 +101,8 @@ export function Menu({
     <>
       <div
         ref={triggerRef}
-        className="inline-block"
+        className={triggerClassName}
+        data-open={open ? "" : undefined}
         onClick={() => setOpen((o) => !o)}
       >
         {button}

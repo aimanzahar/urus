@@ -101,6 +101,7 @@ export default function RelationCell({
   variant,
 }: CellProps) {
   const links = row.relations[field.id] ?? [];
+  const ghost = links.length === 0 && variant === "cell";
   const [, start] = useTransition();
 
   const remove = (toRowId: string) => {
@@ -115,7 +116,7 @@ export default function RelationCell({
   return (
     <div
       className={`flex flex-wrap items-center gap-1 ${
-        variant === "cell" ? "min-h-[28px] px-2 py-1" : "min-h-[34px]"
+        variant === "cell" ? "flex-1 min-h-[28px] px-2 py-1" : "min-h-[34px]"
       }`}
     >
       {links.map((l) => (
@@ -129,11 +130,25 @@ export default function RelationCell({
       ))}
       <Menu
         button={
-          <button type="button" className="chip opt-gray cursor-pointer">
-            + Link
-          </button>
+          ghost ? (
+            // Empty table cell: a quiet hover-revealed affordance (matching
+            // the date cells), filling the cell so the whole area is a
+            // click/tap target. [[data-open]_&] keeps it visible while its
+            // menu is open; the row div carries the `group` class.
+            <button
+              type="button"
+              className="flex w-full items-center gap-1 px-0 text-xs text-ink-faint opacity-0 group-hover:opacity-100 focus:opacity-100 [[data-open]_&]:opacity-100 transition-opacity cursor-pointer"
+            >
+              <span className="text-[11px]">＋</span> Link
+            </button>
+          ) : (
+            <button type="button" className="chip opt-gray cursor-pointer">
+              + Link
+            </button>
+          )
         }
         width={260}
+        triggerClassName={ghost ? "flex-1 flex" : "inline-block"}
       >
         <Picker
           databaseId={databaseId}

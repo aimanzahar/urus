@@ -88,8 +88,10 @@ export default function DatabaseWorkspace({
   return (
     <div className="h-full flex flex-col">
       <header className="shrink-0 bg-surface border-b border-line">
-        <div className="flex items-center gap-2 px-4 pt-3">
-          <span className="text-lg">{database.icon ?? "▤"}</span>
+        {/* pl-5 + w-6 icon + gap-2 puts the title text on the table's 52px
+            left rule (44px gutter + 8px cell padding). */}
+        <div className="flex items-center gap-2 pl-5 pr-4 pt-3">
+          <span className="w-6 text-center text-lg">{database.icon ?? "▤"}</span>
           <DbTitle database={database} />
           <div className="ml-auto flex items-center gap-2">
             <PresenceAvatars />
@@ -97,7 +99,8 @@ export default function DatabaseWorkspace({
             <DbMenu database={database} />
           </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2">
+        {/* 42px + the active tab's 10px pill padding = the same 52px rule. */}
+        <div className="flex items-center gap-2 pr-3 py-2" style={{ paddingLeft: 42 }}>
           <ViewTabs
             databaseId={database.id}
             views={views}

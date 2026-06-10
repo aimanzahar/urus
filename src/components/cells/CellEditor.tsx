@@ -1,14 +1,16 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRealtime } from "@/components/realtime/RealtimeProvider";
 import SelectCell from "./SelectCell";
 import RelationCell from "./RelationCell";
 import ImageCell from "./ImageCell";
 import { cellString, saveCell, type CellProps } from "./shared";
 
+// !px-2: the unlayered base input rule (padding 0.5rem 0.65rem) beats layered
+// utilities, and cell text must sit on the table's 52px left rule.
 const cellInputClass =
-  "!border-0 !bg-transparent !rounded-none !shadow-none focus:!shadow-none px-2 py-1 text-sm w-full";
+  "!border-0 !bg-transparent !rounded-none !shadow-none focus:!shadow-none !px-2 py-1 text-sm w-full";
 
 function TextCell({ databaseId, row, field, variant }: CellProps) {
   const [, start] = useTransition();
@@ -56,15 +58,36 @@ function NumberCell({ databaseId, row, field, variant }: CellProps) {
 
 function DateCell({ databaseId, row, field, variant }: CellProps) {
   const [, start] = useTransition();
+  // Bumped to remount after an abandoned partial entry (value stays "" but
+  // Chrome keeps ghost segment text in the control).
+  const [resetKey, setResetKey] = useState(0);
   const persisted = cellString(row, field);
   return (
     <input
+      key={`${row.updatedAt}:${field.id}:${resetKey}`}
       type="date"
       defaultValue={persisted}
-      onChange={(e) =>
-        start(() => void saveCell(databaseId, row, field, e.target.value))
-      }
-      className={variant === "cell" ? cellInputClass : ""}
+      // .cell-date + [data-empty] keep empty cells visually quiet: the
+      // dd/mm/yyyy hint and picker icon only appear on row hover or focus.
+      data-empty={persisted ? undefined : ""}
+      onChange={(e) => {
+        // Track emptiness only — saving here would remount the input via the
+        // updatedAt key mid-edit, eating keystrokes and persisting partial
+        // dates. The save happens on blur, like the text/number cells.
+        const el = e.currentTarget;
+        if (el.value) el.removeAttribute("data-empty");
+        else el.setAttribute("data-empty", "");
+      }}
+      onBlur={(e) => {
+        const el = e.currentTarget;
+        if (el.value !== persisted)
+          start(() => void saveCell(databaseId, row, field, el.value));
+        else if (!el.value) setResetKey((k) => k + 1);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      className={variant === "cell" ? `${cellInputClass} cell-date` : ""}
     />
   );
 }

@@ -18,7 +18,10 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/gif": "gif",
 };
 
-const UPLOAD_DIR = join(process.cwd(), "data", "uploads");
+const UPLOAD_DIR = join(
+  process.env.URUS_DATA_DIR ?? join(process.cwd(), "data"),
+  "uploads",
+);
 
 function safeExt(filename: string | undefined, mime: string): string {
   const fromMime = ALLOWED_TYPES[mime];

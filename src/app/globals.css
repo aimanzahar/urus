@@ -301,7 +301,30 @@ input[type="number"]::-webkit-inner-spin-button {
 .opt-dot.opt-pink   { background: #d64a9b; }
 .opt-dot.opt-teal   { background: #3daab0; }
 
+/* --- table cells ------------------------------------------------------ */
+/* Empty date cells stay quiet: the browser's dd/mm/yyyy hint and calendar
+   icon only appear while the row is hovered or the input is focused.
+   (.tbl-row is the table row; [data-empty] is managed by DateCell.) */
+.cell-date::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+.tbl-row:hover .cell-date::-webkit-calendar-picker-indicator,
+.cell-date:focus::-webkit-calendar-picker-indicator {
+  opacity: 0.45;
+}
+.cell-date[data-empty]:not(:focus) {
+  color: transparent;
+}
+.tbl-row:hover .cell-date[data-empty]:not(:focus) {
+  color: var(--ink-faint);
+}
+
 /* --- misc ----------------------------------------------------------- */
+.hover-wash:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
 .hairline {
   height: 1px;
   background: var(--line);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { Menu, useMenuClose } from "@/components/Menu";
 import {
   createFieldAction,
@@ -83,15 +83,25 @@ function Form({ databaseId }: { databaseId: string }) {
   );
 }
 
-export default function AddFieldMenu({ databaseId }: { databaseId: string }) {
+export default function AddFieldMenu({
+  databaseId,
+  align = "right",
+  button,
+}: {
+  databaseId: string;
+  align?: "left" | "right";
+  button?: ReactNode;
+}) {
   return (
     <Menu
-      align="right"
+      align={align}
       width={272}
       button={
-        <button className="btn btn-ghost btn-sm" title="Add field">
-          + Field
-        </button>
+        button ?? (
+          <button className="btn btn-ghost btn-sm" title="Add field">
+            + Field
+          </button>
+        )
       }
     >
       <Form databaseId={databaseId} />

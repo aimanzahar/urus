@@ -29,11 +29,41 @@ import {
   deleteFieldAction,
   moveRowAction,
 } from "@/lib/actions";
-import type { Field, Row, View } from "@/lib/types";
+import type { Field, FieldType, Row, View } from "@/lib/types";
 import FieldHeaderMenu from "./FieldHeaderMenu";
 import { RowMenuItems } from "./rowMenu";
+import AddFieldMenu from "../chrome/AddFieldMenu";
 import { setViewConfig } from "../chrome/util";
 import type { ViewProps } from "./shared";
+
+// Default column widths by field type — a checkbox doesn't need the same
+// room as a title. A leading text field is the primary column: it flexes to
+// absorb leftover width so the sheet always reaches toward the far edge.
+// The trailing fixed stub hosts the "+ New field" affordance.
+const FIELD_WIDTH: Record<FieldType, string> = {
+  text: "240px",
+  number: "150px",
+  date: "165px",
+  checkbox: "110px",
+  single_select: "190px",
+  multi_select: "230px",
+  relation: "230px",
+  image: "150px",
+  file: "150px",
+};
+const GUTTER = "44px";
+const PRIMARY_WIDTH = "minmax(260px, 1fr)";
+const STUB_WIDTH = "112px";
+
+function tableCols(fields: Field[]): string {
+  const cols = fields.map((f, i) => {
+    // ?? guards hand-edited/legacy rows: an unknown type must not produce
+    // "undefined" in grid-template-columns (the whole declaration would drop).
+    const w = FIELD_WIDTH[f.type] ?? "180px";
+    return i === 0 && f.type === "text" ? PRIMARY_WIDTH : w;
+  });
+  return `${GUTTER} ${cols.join(" ")} ${STUB_WIDTH}`;
+}
 
 function ColumnMenuItems({
   databaseId,
@@ -84,10 +114,12 @@ function Cell({
   databaseId,
   field,
   row,
+  bordered,
 }: {
   databaseId: string;
   field: Field;
   row: Row;
+  bordered: boolean;
 }) {
   const rt = useRealtime();
   const cellKey = `${row.id}:${field.id}`;
@@ -95,7 +127,7 @@ function Cell({
   const editorColor = rt?.editingByCell[cellKey]?.[0]?.color;
   return (
     <div
-      className="relative border-l border-line first:border-l-0 flex items-stretch min-h-[34px] transition-shadow"
+      className={`relative ${bordered ? "border-l border-line" : ""} flex items-stretch min-h-[36px] transition-shadow`}
       style={
         editorColor
           ? { boxShadow: `inset 0 0 0 2px ${editorColor}`, zIndex: 1 }
@@ -119,8 +151,14 @@ function Cells({
 }) {
   return (
     <>
-      {fields.map((f) => (
-        <Cell key={f.id} databaseId={databaseId} field={f} row={row} />
+      {fields.map((f, i) => (
+        <Cell
+          key={f.id}
+          databaseId={databaseId}
+          field={f}
+          row={row}
+          bordered={i > 0}
+        />
       ))}
     </>
   );
@@ -156,20 +194,20 @@ function SortableRow({
         transition,
         ...(editorColor ? { "--editor-color": editorColor } : {}),
       } as CSSProperties}
-      className={`grid border-b border-line hover:bg-surface-2 group relative editing-bar ${
+      className={`tbl-row grid bg-surface border-b border-line hover:bg-surface-2 group relative editing-bar ${
         editors.length ? "editing-active" : ""
-      } ${isDragging ? "drag-ghost z-10 bg-surface" : ""}`}
+      } ${isDragging ? "drag-ghost z-10" : ""}`}
     >
       {editors.length > 0 ? (
         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10">
           <EditingBadge editors={editors} />
         </div>
       ) : null}
-      <div className="flex items-center justify-center gap-0.5 text-ink-faint">
+      <div className="flex items-center justify-center gap-px text-ink-faint">
         {draggable ? (
           <button
             className="icon-btn opacity-0 group-hover:opacity-100 cursor-grab"
-            style={{ width: 18, height: 22 }}
+            style={{ width: 18, height: 24 }}
             aria-label="Drag row"
             {...attributes}
             {...listeners}
@@ -179,7 +217,7 @@ function SortableRow({
         ) : null}
         <button
           className="icon-btn opacity-0 group-hover:opacity-100"
-          style={{ width: 18, height: 22 }}
+          style={{ width: 18, height: 24 }}
           aria-label="Open row"
           onClick={() => onOpenRow(row.id)}
         >
@@ -187,6 +225,7 @@ function SortableRow({
         </button>
       </div>
       <Cells databaseId={databaseId} fields={fields} row={row} />
+      <div className="border-l border-line" />
     </div>
   );
 }
@@ -202,7 +241,7 @@ export default function TableView({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   );
-  const cols = `36px ${fields.map(() => "minmax(180px,1fr)").join(" ")}`;
+  const cols = tableCols(fields);
   const sortActive = (view.config.sort?.length ?? 0) > 0;
   const draggable = !sortActive;
 
@@ -256,22 +295,38 @@ export default function TableView({
   );
 
   return (
-    <div className="min-w-full inline-block align-top text-sm">
+    // Inline min-width: the global `* { min-width: 0 }` reset is unlayered
+    // and beats Tailwind's layered min-w-full utility.
+    <div className="inline-block align-top text-sm" style={{ minWidth: "100%" }}>
       <div
-        className="grid sticky top-0 z-20 bg-surface border-b border-line-strong"
+        className="grid sticky top-0 z-20 bg-surface-2 border-b border-line-strong"
         style={{ gridTemplateColumns: cols }}
       >
         <div />
-        {fields.map((f) => (
+        {fields.map((f, i) => (
           <ContextMenu
             key={f.id}
             menu={<ColumnMenuItems databaseId={databaseId} view={view} field={f} />}
           >
-            <div className="border-l border-line first:border-l-0">
+            <div className={i > 0 ? "border-l border-line" : ""}>
               <FieldHeaderMenu databaseId={databaseId} field={f} />
             </div>
           </ContextMenu>
         ))}
+        <div className="border-l border-line flex">
+          <AddFieldMenu
+            databaseId={databaseId}
+            align="left"
+            button={
+              <button
+                className="flex items-center gap-1 h-full px-2.5 text-xs text-ink-faint hover:text-ink-soft hover-wash transition-colors whitespace-nowrap cursor-pointer"
+                title="Add field"
+              >
+                <span className="text-[11px]">＋</span> New field
+              </button>
+            }
+          />
+        </div>
       </div>
 
       {sortActive ? (
@@ -294,18 +349,28 @@ export default function TableView({
 
       <button
         onClick={addRow}
-        className="grid w-full text-left hover:bg-surface-2 text-ink-faint"
+        className="grid w-full text-left bg-surface hover:bg-surface-2 border-b border-line text-ink-faint hover:text-ink-soft transition-colors"
         style={{ gridTemplateColumns: cols }}
       >
-        <span className="flex items-center justify-center">+</span>
-        <span className="px-2 py-2 text-[13px]">New row</span>
+        <span className="flex items-center justify-center text-[11px]">＋</span>
+        <span className="px-2 py-2 text-xs">New row</span>
       </button>
 
       {rows.length === 0 ? (
-        <p className="text-xs text-ink-faint px-3 py-3">
+        <p
+          className="text-xs text-ink-faint py-3"
+          style={{ paddingLeft: 52 }}
+        >
           No rows yet. Click “New row” to add one.
         </p>
-      ) : null}
+      ) : (
+        <p
+          className="text-xs text-ink-soft select-none pt-2 pb-8"
+          style={{ paddingLeft: 52 }}
+        >
+          {rows.length} {rows.length === 1 ? "row" : "rows"}
+        </p>
+      )}
     </div>
   );
 }

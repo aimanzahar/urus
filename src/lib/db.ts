@@ -2,7 +2,9 @@ import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-const DATA_DIR = join(process.cwd(), "data");
+// URUS_DATA_DIR lets local dev point at a writable copy (the real data/
+// is owned by the container user and read-only to the host).
+const DATA_DIR = process.env.URUS_DATA_DIR ?? join(process.cwd(), "data");
 const DB_PATH = join(DATA_DIR, "app.db");
 
 let db: Database.Database | null = null;

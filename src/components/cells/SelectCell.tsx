@@ -166,7 +166,11 @@ export default function SelectCell({
   );
 
   return (
-    <Menu button={trigger} width={250}>
+    <Menu
+      button={trigger}
+      width={250}
+      triggerClassName={variant === "cell" ? "flex-1" : "inline-block"}
+    >
       <Popover
         databaseId={databaseId}
         row={row}
