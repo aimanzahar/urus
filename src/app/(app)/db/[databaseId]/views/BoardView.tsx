@@ -17,12 +17,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState, useTransition } from "react";
-import { optClass } from "@/components/cells/shared";
+import { useCallback, useState, useTransition, type CSSProperties } from "react";
+import CellFlash from "@/components/cells/FlashCell";
+import { optClass, rowSignature } from "@/components/cells/shared";
 import { ContextMenu } from "@/components/ContextMenu";
 import { MenuItem } from "@/components/Menu";
 import { useRealtime } from "@/components/realtime/RealtimeProvider";
-import { EditingBadge, editingShadow } from "@/components/realtime/EditingBadge";
+import { markLocalEdit } from "@/components/realtime/changeFlash";
+import { useFlip } from "@/components/realtime/flip";
+import { EditingBadge } from "@/components/realtime/EditingBadge";
 import {
   addOptionAction,
   createRowAction,
@@ -84,17 +87,27 @@ function Card({
     useSortable({ id: row.id });
   const rt = useRealtime();
   const editors = rt?.editingByRow[row.id] ?? [];
+  const editorColor = editors[0]?.color;
+  // Glide the card to its new spot when a remote move reorders/relocates it.
+  const flipRef = useFlip(row.id, isDragging);
+  const setRefs = useCallback(
+    (el: HTMLElement | null) => {
+      setNodeRef(el);
+      flipRef(el);
+    },
+    [setNodeRef, flipRef],
+  );
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        boxShadow: editingShadow(editors),
-      }}
-      className={`card p-2.5 cursor-pointer hover:shadow-md relative ${
-        isDragging ? "opacity-30" : ""
-      }`}
+        ...(editorColor ? { "--editor-color": editorColor } : {}),
+      } as CSSProperties}
+      className={`card p-2.5 cursor-pointer hover:shadow-md relative editing-bar ${
+        editors.length ? "editing-active" : ""
+      } ${isDragging ? "opacity-30" : ""}`}
       onClick={() => onOpenRow(row.id)}
       {...attributes}
       {...listeners}
@@ -105,6 +118,7 @@ function Card({
         </div>
       ) : null}
       <CardBody row={row} fields={fields} skip={skip} />
+      <CellFlash flashKey={row.id} signature={rowSignature(row)} />
     </div>
   );
 }
@@ -318,6 +332,7 @@ export default function BoardView({
     if (!over) return;
     const movedId = String(active.id);
     const overId = String(over.id);
+    markLocalEdit(movedId); // don't flash our own card after we drop it
 
     const targetKey = overId.startsWith("col:")
       ? overId.slice(4)

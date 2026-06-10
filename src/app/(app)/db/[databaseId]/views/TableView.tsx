@@ -15,12 +15,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useTransition } from "react";
+import { useTransition, type CSSProperties } from "react";
 import CellEditor from "@/components/cells/CellEditor";
+import CellFlash from "@/components/cells/FlashCell";
+import { cellSignature } from "@/components/cells/shared";
 import { ContextMenu } from "@/components/ContextMenu";
 import { MenuItem } from "@/components/Menu";
 import { useRealtime } from "@/components/realtime/RealtimeProvider";
-import { EditingBadge, editingShadow } from "@/components/realtime/EditingBadge";
+import { EditingBadge } from "@/components/realtime/EditingBadge";
 import {
   createFieldAction,
   createRowAction,
@@ -78,6 +80,34 @@ function ColumnMenuItems({
   );
 }
 
+function Cell({
+  databaseId,
+  field,
+  row,
+}: {
+  databaseId: string;
+  field: Field;
+  row: Row;
+}) {
+  const rt = useRealtime();
+  const cellKey = `${row.id}:${field.id}`;
+  // Field-level presence: ring the exact cell a remote user is in, in their color.
+  const editorColor = rt?.editingByCell[cellKey]?.[0]?.color;
+  return (
+    <div
+      className="relative border-l border-line first:border-l-0 flex items-stretch min-h-[34px] transition-shadow"
+      style={
+        editorColor
+          ? { boxShadow: `inset 0 0 0 2px ${editorColor}`, zIndex: 1 }
+          : undefined
+      }
+    >
+      <CellEditor databaseId={databaseId} row={row} field={field} variant="cell" />
+      <CellFlash flashKey={cellKey} signature={cellSignature(row, field)} />
+    </div>
+  );
+}
+
 function Cells({
   databaseId,
   fields,
@@ -90,12 +120,7 @@ function Cells({
   return (
     <>
       {fields.map((f) => (
-        <div
-          key={f.id}
-          className="border-l border-line first:border-l-0 flex items-stretch min-h-[34px]"
-        >
-          <CellEditor databaseId={databaseId} row={row} field={f} variant="cell" />
-        </div>
+        <Cell key={f.id} databaseId={databaseId} field={f} row={row} />
       ))}
     </>
   );
@@ -120,6 +145,7 @@ function SortableRow({
     useSortable({ id: row.id, disabled: !draggable });
   const rt = useRealtime();
   const editors = rt?.editingByRow[row.id] ?? [];
+  const editorColor = editors[0]?.color;
 
   return (
     <div
@@ -128,11 +154,11 @@ function SortableRow({
         gridTemplateColumns: cols,
         transform: CSS.Transform.toString(transform),
         transition,
-        boxShadow: editingShadow(editors),
-      }}
-      className={`grid border-b border-line hover:bg-surface-2 group relative ${
-        isDragging ? "drag-ghost z-10 bg-surface" : ""
-      }`}
+        ...(editorColor ? { "--editor-color": editorColor } : {}),
+      } as CSSProperties}
+      className={`grid border-b border-line hover:bg-surface-2 group relative editing-bar ${
+        editors.length ? "editing-active" : ""
+      } ${isDragging ? "drag-ghost z-10 bg-surface" : ""}`}
     >
       {editors.length > 0 ? (
         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10">

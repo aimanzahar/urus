@@ -3,6 +3,9 @@
 import { useRef, useTransition } from "react";
 import { Drawer } from "@/components/Drawer";
 import CellEditor from "@/components/cells/CellEditor";
+import CellFlash from "@/components/cells/FlashCell";
+import { cellSignature } from "@/components/cells/shared";
+import { useRealtime } from "@/components/realtime/RealtimeProvider";
 import {
   deleteRowAction,
   removeCoverAction,
@@ -86,6 +89,7 @@ function Body({
   row: Row;
   onClose: () => void;
 }) {
+  const rt = useRealtime();
   const onDelete = () => {
     if (!confirm("Delete this row?")) return;
     const fd = new FormData();
@@ -99,24 +103,36 @@ function Body({
     <div>
       <CoverControl databaseId={databaseId} row={row} />
       <div className="flex flex-col gap-3">
-        {fields.map((f) => (
-          <div key={f.id} className="grid grid-cols-[120px_1fr] gap-2 items-start">
-            <span className="text-[13px] text-ink-soft flex items-center gap-1.5 pt-1.5">
-              <span className="text-ink-faint w-4 text-center">
-                {FIELD_TYPE_ICON[f.type]}
+        {fields.map((f) => {
+          const cellKey = `${row.id}:${f.id}`;
+          const editorColor = rt?.editingByCell[cellKey]?.[0]?.color;
+          return (
+            <div key={f.id} className="grid grid-cols-[120px_1fr] gap-2 items-start">
+              <span className="text-[13px] text-ink-soft flex items-center gap-1.5 pt-1.5">
+                <span className="text-ink-faint w-4 text-center">
+                  {FIELD_TYPE_ICON[f.type]}
+                </span>
+                <span className="truncate">{f.name}</span>
               </span>
-              <span className="truncate">{f.name}</span>
-            </span>
-            <div className="min-h-[34px] flex items-center">
-              <CellEditor
-                databaseId={databaseId}
-                row={row}
-                field={f}
-                variant="panel"
-              />
+              <div
+                className="relative min-h-[34px] flex items-center rounded-md transition-shadow"
+                style={
+                  editorColor
+                    ? { boxShadow: `inset 0 0 0 2px ${editorColor}` }
+                    : undefined
+                }
+              >
+                <CellEditor
+                  databaseId={databaseId}
+                  row={row}
+                  field={f}
+                  variant="panel"
+                />
+                <CellFlash flashKey={cellKey} signature={cellSignature(row, f)} />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="hairline my-4" />
       <button className="btn btn-danger btn-sm" onClick={onDelete}>

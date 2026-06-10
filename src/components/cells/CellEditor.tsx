@@ -126,8 +126,8 @@ export default function CellEditor(props: CellProps) {
   return (
     <div
       style={{ display: "contents" }}
-      onFocus={() => rt?.reportEditing(props.row.id)}
-      onBlur={() => rt?.reportEditing(null)}
+      onFocus={() => rt?.reportEditing(props.row.id, props.field.id)}
+      onBlur={() => rt?.reportEditing(null, null)}
     >
       {renderCell(props)}
     </div>

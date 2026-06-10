@@ -9,7 +9,7 @@ function Avatar({ viewer, you }: { viewer: Viewer; you: boolean }) {
   return (
     <div
       title={you ? `${viewer.name} (you)` : viewer.name}
-      className="w-6 h-6 rounded-full grid place-items-center text-[10px] font-semibold text-white ring-2 ring-surface select-none"
+      className="animate-pop w-6 h-6 rounded-full grid place-items-center text-[10px] font-semibold text-white ring-2 ring-surface select-none"
       style={{ background: viewer.color }}
     >
       {initials(viewer.name)}

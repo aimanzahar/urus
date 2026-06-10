@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     databaseId?: string;
     sessionId?: string;
     editingRowId?: string | null;
+    editingFieldId?: string | null;
   } = {};
   try {
     body = await req.json();
@@ -24,7 +25,9 @@ export async function POST(req: Request) {
   const sessionId = String(body.sessionId ?? "");
   if (databaseId && sessionId) {
     const editingRowId = body.editingRowId ? String(body.editingRowId) : null;
-    setEditing(databaseId, sessionId, editingRowId);
+    const editingFieldId =
+      editingRowId && body.editingFieldId ? String(body.editingFieldId) : null;
+    setEditing(databaseId, sessionId, editingRowId, editingFieldId);
     touchViewer(databaseId, sessionId);
   }
   return new Response("ok");

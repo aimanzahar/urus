@@ -11,6 +11,8 @@ export interface PublicViewer {
   color: string;
   /** rowId the viewer is currently editing, or null. */
   editingRowId: string | null;
+  /** fieldId the viewer is currently editing within that row, or null. */
+  editingFieldId: string | null;
 }
 
 export type RealtimeEvent =
@@ -59,12 +61,15 @@ const hub: Hub = g.__urusHub ?? (g.__urusHub = createHub());
 function viewersOf(databaseId: string): PublicViewer[] {
   const m = hub.presence.get(databaseId);
   if (!m) return [];
-  return [...m.values()].map(({ sessionId, name, color, editingRowId }) => ({
-    sessionId,
-    name,
-    color,
-    editingRowId,
-  }));
+  return [...m.values()].map(
+    ({ sessionId, name, color, editingRowId, editingFieldId }) => ({
+      sessionId,
+      name,
+      color,
+      editingRowId,
+      editingFieldId,
+    }),
+  );
 }
 
 function broadcastPresence(h: Hub, databaseId: string): void {
@@ -105,6 +110,7 @@ export function addViewer(
   m.set(v.sessionId, {
     ...v,
     editingRowId: prev?.editingRowId ?? null,
+    editingFieldId: prev?.editingFieldId ?? null,
     lastSeen: Date.now(),
   });
   broadcastPresence(hub, databaseId);
@@ -128,14 +134,16 @@ export function setEditing(
   databaseId: string,
   sessionId: string,
   editingRowId: string | null,
+  editingFieldId: string | null = null,
 ): void {
   const v = hub.presence.get(databaseId)?.get(sessionId);
   if (!v) return;
-  if (v.editingRowId === editingRowId) {
+  if (v.editingRowId === editingRowId && v.editingFieldId === editingFieldId) {
     v.lastSeen = Date.now();
     return;
   }
   v.editingRowId = editingRowId;
+  v.editingFieldId = editingFieldId;
   v.lastSeen = Date.now();
   broadcastPresence(hub, databaseId);
 }

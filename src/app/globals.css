@@ -346,3 +346,52 @@ input[type="number"]::-webkit-inner-spin-button {
   outline: 2px dashed color-mix(in srgb, var(--accent) 45%, transparent);
   outline-offset: -2px;
 }
+
+/* --- realtime multiplayer animations -------------------------------- */
+
+/* Brief wash over a cell/card when a *remote* edit changes its value, tinted
+   with the editor's user color. Rendered as an absolute child of a
+   position:relative cell/card; removes itself on animationend. */
+.cell-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--flash-color, var(--accent)) 32%, transparent);
+  animation: cell-flash 950ms ease-out forwards;
+}
+@keyframes cell-flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Left "someone is editing here" bar on rows/cards. The bar always exists
+   (opacity 0) so it can fade in AND out; .editing-active turns it on and adds
+   a gentle pulse. --editor-color is set inline from the editor's user color. */
+.editing-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--editor-color, var(--accent));
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.editing-bar.editing-active::after {
+  opacity: 1;
+  animation: editing-pulse 1.8s ease-in-out infinite;
+}
+@keyframes editing-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-flash { animation: none; opacity: 0; }
+  .editing-bar.editing-active::after { animation: none; }
+}

@@ -11,6 +11,7 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { basePath } from "@/lib/url";
+import { noteEditorColor } from "./changeFlash";
 import {
   getIdentity,
   getSessionId,
@@ -23,15 +24,18 @@ export interface Viewer {
   name: string;
   color: string;
   editingRowId: string | null;
+  editingFieldId: string | null;
 }
 
 interface RealtimeValue {
   viewers: Viewer[];
   /** rowId -> other viewers currently editing it (excludes self). */
   editingByRow: Record<string, Viewer[]>;
+  /** `${rowId}:${fieldId}` -> other viewers editing that exact cell (excludes self). */
+  editingByCell: Record<string, Viewer[]>;
   identity: Identity;
   rename: (name: string) => void;
-  reportEditing: (rowId: string | null) => void;
+  reportEditing: (rowId: string | null, fieldId?: string | null) => void;
 }
 
 const Ctx = createContext<RealtimeValue | null>(null);
@@ -104,7 +108,18 @@ export default function RealtimeProvider({ children }: { children: ReactNode }) 
         return;
       }
       if (data.type === "change") scheduleRefresh();
-      else if (data.type === "presence") setViewers(data.viewers ?? []);
+      else if (data.type === "presence") {
+        const next = data.viewers ?? [];
+        // Cache each editor's color by cell/row so a change event that lands
+        // after they blur can still flash in their color.
+        for (const v of next) {
+          if (v.sessionId === sid || !v.editingRowId) continue;
+          if (v.editingFieldId)
+            noteEditorColor(`${v.editingRowId}:${v.editingFieldId}`, v.color);
+          noteEditorColor(v.editingRowId, v.color);
+        }
+        setViewers(next);
+      }
     };
     es.onopen = () => {
       if (openedOnce) doRefresh(); // reconnected — catch up on missed changes
@@ -119,16 +134,23 @@ export default function RealtimeProvider({ children }: { children: ReactNode }) 
   const editTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastReported = useRef<string | null>(null);
   const reportEditing = useCallback(
-    (rowId: string | null) => {
+    (rowId: string | null, fieldId: string | null = null) => {
       if (!dbId) return;
       if (editTimer.current) clearTimeout(editTimer.current);
+      const fid = rowId ? fieldId : null;
+      const sig = `${rowId ?? ""}:${fid ?? ""}`;
       editTimer.current = setTimeout(() => {
-        if (lastReported.current === rowId) return;
-        lastReported.current = rowId;
+        if (lastReported.current === sig) return;
+        lastReported.current = sig;
         fetch(`${basePath()}/api/presence`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ databaseId: dbId, sessionId: sid, editingRowId: rowId }),
+          body: JSON.stringify({
+            databaseId: dbId,
+            sessionId: sid,
+            editingRowId: rowId,
+            editingFieldId: fid,
+          }),
           keepalive: true,
         }).catch(() => {});
       }, 120);
@@ -142,14 +164,24 @@ export default function RealtimeProvider({ children }: { children: ReactNode }) 
   );
 
   const editingByRow: Record<string, Viewer[]> = {};
+  const editingByCell: Record<string, Viewer[]> = {};
   for (const v of viewers) {
     if (v.sessionId === sid || !v.editingRowId) continue;
     (editingByRow[v.editingRowId] ??= []).push(v);
+    if (v.editingFieldId)
+      (editingByCell[`${v.editingRowId}:${v.editingFieldId}`] ??= []).push(v);
   }
 
   return (
     <Ctx.Provider
-      value={{ viewers, editingByRow, identity, rename, reportEditing }}
+      value={{
+        viewers,
+        editingByRow,
+        editingByCell,
+        identity,
+        rename,
+        reportEditing,
+      }}
     >
       {children}
     </Ctx.Provider>

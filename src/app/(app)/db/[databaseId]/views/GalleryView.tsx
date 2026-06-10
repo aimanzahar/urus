@@ -1,5 +1,7 @@
 "use client";
 
+import CellFlash from "@/components/cells/FlashCell";
+import { rowSignature } from "@/components/cells/shared";
 import { ContextMenu } from "@/components/ContextMenu";
 import { uploadUrl } from "@/lib/url";
 import type { Row, View } from "@/lib/types";
@@ -52,8 +54,9 @@ export default function GalleryView({
           >
           <button
             onClick={() => onOpenRow(row.id)}
-            className="card overflow-hidden text-left hover:shadow-md transition-shadow flex flex-col w-full"
+            className="card relative overflow-hidden text-left hover:shadow-md transition-shadow flex flex-col w-full"
           >
+            <CellFlash flashKey={row.id} signature={rowSignature(row)} />
             <div className="h-36 bg-surface-2 flex items-center justify-center overflow-hidden">
               {cover ? (
                 <img
